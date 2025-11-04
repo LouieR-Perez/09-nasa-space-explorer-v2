@@ -21,6 +21,29 @@ const gallery = document.getElementById('gallery');
 // A small flag so we know if we've already loaded images once.
 let hasLoadedOnce = false;
 
+// ================= Random Fact (Did You Know?) =================
+// Simple array of beginner-friendly space facts.
+const spaceFacts = [
+	'Space is completely silent because there is no air for sound waves to travel through.',
+	'One day on Venus is longer than one year on Venus due to its slow rotation.',
+	'Neutron stars can spin 600+ times per second — incredibly fast!',
+	'Jupiter has at least 90 moons — and scientists are still counting.',
+	'Saturn’s rings are mostly ice chunks and rock dust orbiting the planet.',
+	'The Sun accounts for about 99.8% of the mass in our solar system.',
+	'A spacesuit costs over $10 million and is a tiny personal spacecraft.',
+	'Light from the Sun takes about 8 minutes and 20 seconds to reach Earth.',
+	'Mars appears red because of iron oxide (rust) on its surface.',
+	'In space, astronauts grow a little taller due to lower gravity effects on the spine.'
+];
+
+function showRandomFact() {
+	const box = document.getElementById('factBox');
+	if (!box) return; // If missing, just skip.
+	const fact = spaceFacts[Math.floor(Math.random() * spaceFacts.length)];
+	// Use simple HTML with a bold label.
+	box.innerHTML = `<strong>Did You Know?</strong> <span>${fact}</span>`;
+}
+
 // Helper: Clear anything currently in the gallery (including placeholder).
 function clearGallery() {
 	gallery.innerHTML = '';
@@ -284,3 +307,6 @@ if (getImagesBtn && gallery) {
 	// If elements are missing, log a helpful message for debugging.
 	console.warn('Required DOM elements not found (button or gallery).');
 }
+
+// Show one random fact as soon as the script runs (DOM is loaded because script is at end).
+showRandomFact();
