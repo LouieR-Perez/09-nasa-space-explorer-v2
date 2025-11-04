@@ -35,6 +35,16 @@ function showMessage(text) {
 	gallery.appendChild(msgDiv);
 }
 
+// Helper: Show a loading state while we fetch new data.
+function showLoading() {
+	clearGallery();
+	const loadDiv = document.createElement('div');
+	loadDiv.className = 'placeholder';
+	// Simple text + animated dots (CSS not required) for beginners
+	loadDiv.innerHTML = `<div class="placeholder-icon">⏳</div><p>Loading space media...</p>`;
+	gallery.appendChild(loadDiv);
+}
+
 // Helper: Create one gallery card (div) for an APOD item.
 // We also attach a data-index so we can find the item later when opening the modal.
 function createGalleryItem(item, index) {
@@ -171,10 +181,8 @@ async function fetchAndDisplayImages() {
 	const originalBtnText = getImagesBtn.textContent;
 	getImagesBtn.textContent = 'Loading...';
 
-	// First time we fetch, remove the placeholder.
-	if (!hasLoadedOnce) {
-		clearGallery();
-	}
+	// Always show a loading message while we fetch new data.
+	showLoading();
 
 	try {
 		const response = await fetch(apodData);
