@@ -142,3 +142,110 @@ button:hover {
   font-size: 48px;
   margin-bottom: 20px;
 }
+
+/* ======================= Modal Styles ======================= */
+/* Hidden helper class (stronger rule so it isn't overridden by later .modal display) */
+.hidden { display: none !important; }
+.modal.hidden { display: none !important; }
+
+/* Modal root container spans full viewport */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* above rest of UI */
+  font-family: Arial, sans-serif;
+}
+
+/* Semi–transparent dark backdrop */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+/* The white dialog box */
+.modal-content {
+  position: relative;
+  background: #fff;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  padding: 25px 28px 32px;
+  animation: modalFadeIn 0.25s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: #eee;
+  color: #333;
+  font-size: 24px;
+  line-height: 1;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.modal-close:hover {
+  background: #ddd;
+}
+
+.modal-body h2 {
+  font-size: 24px;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.modal-date {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.modal-media-wrapper img, .modal-media-wrapper video {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  margin-bottom: 16px;
+}
+
+.modal-explanation {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #222;
+  white-space: pre-line; /* preserve paragraphs if any */
+  margin-bottom: 16px;
+}
+
+.modal-video-link a {
+  display: inline-block;
+  background: #2d6cdf;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.modal-video-link a:hover {
+  background: #1f56b2;
+}
+
+@media (max-width: 640px) {
+  .modal-content { padding: 20px 20px 28px; }
+  .modal-body h2 { font-size: 20px; }
+}

@@ -36,9 +36,12 @@ function showMessage(text) {
 }
 
 // Helper: Create one gallery card (div) for an APOD item.
-function createGalleryItem(item) {
+// We also attach a data-index so we can find the item later when opening the modal.
+function createGalleryItem(item, index) {
 	const card = document.createElement('div');
 	card.className = 'gallery-item';
+	card.setAttribute('data-index', index.toString());
+	card.tabIndex = 0; // Make focusable for keyboard users
 
 	// Normalize the media type (e.g., 'image' or 'video').
 	const mediaType = (item.media_type || '').toLowerCase();
@@ -58,26 +61,108 @@ function createGalleryItem(item) {
 	img.alt = item.title ? `${item.title} - ${item.date}` : (mediaType === 'video' ? 'Space video' : 'Space image');
 
 	const caption = document.createElement('p');
-	caption.textContent = `${item.title || 'Untitled'} (${item.date || 'Unknown date'})`;
+	caption.textContent = `${mediaType === 'video' ? '▶ ' : ''}${item.title || 'Untitled'} (${item.date || 'Unknown date'})`;
 
-	// If this is a video, wrap BOTH image and caption in an anchor so it opens new tab.
-	if (mediaType === 'video' && item.url) {
-		const link = document.createElement('a');
-		link.href = item.url;
-		link.target = '_blank';
-		link.rel = 'noopener noreferrer';
-		// Add a small play indicator to make it clear it's a video (simple and text-based)
-		caption.textContent = `▶ ${caption.textContent}`;
-		link.appendChild(img);
-		link.appendChild(caption);
-		card.appendChild(link);
-	} else {
-		card.appendChild(img);
-		card.appendChild(caption);
-	}
+	card.appendChild(img);
+	card.appendChild(caption);
+
+	// Click & keyboard (Enter/Space) open modal with details.
+	const open = () => openModalByIndex(index);
+	card.addEventListener('click', open);
+	card.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			open();
+		}
+	});
 
 	return card;
 }
+
+// ================= Modal Logic =================
+// We'll store the latest fetched items so modal can reference them.
+let latestMediaItems = [];
+
+// Grab modal elements (they exist after HTML loads).
+const modal = document.getElementById('mediaModal');
+const modalTitle = document.getElementById('modalTitle');
+const modalDate = document.getElementById('modalDate');
+const modalDescription = document.getElementById('modalDescription');
+const modalMediaWrapper = document.getElementById('modalMediaWrapper');
+const modalVideoLink = document.getElementById('modalVideoLink');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+let lastFocusedElement = null; // to restore focus when closing
+
+function openModalByIndex(index) {
+	const item = latestMediaItems[index];
+	if (!item) return;
+	lastFocusedElement = document.activeElement;
+
+	const mediaType = (item.media_type || '').toLowerCase();
+	modalTitle.textContent = item.title || 'Untitled';
+	modalDate.textContent = item.date || '';
+	modalDescription.textContent = item.explanation || 'No explanation available.';
+
+	// Clear previous media
+	modalMediaWrapper.innerHTML = '';
+	modalVideoLink.innerHTML = '';
+
+	if (mediaType === 'video') {
+		// Show thumbnail image if available, else fallback to url (could be an embeddable link)
+		const img = document.createElement('img');
+		img.src = item.thumbnail_url || item.url || '';
+		img.alt = item.title || 'Space video';
+		modalMediaWrapper.appendChild(img);
+
+		if (item.url) {
+			const link = document.createElement('a');
+			link.href = item.url;
+			link.target = '_blank';
+			link.rel = 'noopener noreferrer';
+			link.textContent = 'Open Video in New Tab';
+			modalVideoLink.appendChild(link);
+		}
+	} else {
+		// Large image
+		const img = document.createElement('img');
+		img.src = item.hdurl || item.url || '';
+		img.alt = item.title || 'Space image';
+		modalMediaWrapper.appendChild(img);
+	}
+
+	// Show modal
+	modal.classList.remove('hidden');
+	modal.setAttribute('aria-hidden', 'false');
+	modalCloseBtn.focus();
+}
+
+function closeModal() {
+	modal.classList.add('hidden');
+	modal.setAttribute('aria-hidden', 'true');
+	if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+		lastFocusedElement.focus();
+	}
+}
+
+// Close actions: button, backdrop click, Escape key.
+if (modalCloseBtn) {
+	modalCloseBtn.addEventListener('click', closeModal);
+}
+
+if (modal) {
+	modal.addEventListener('click', (e) => {
+		if (e.target && e.target.getAttribute('data-close') === 'true') {
+			closeModal();
+		}
+	});
+}
+
+document.addEventListener('keydown', (e) => {
+	if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+		closeModal();
+	}
+});
 
 // Main function: fetch data and build the gallery.
 async function fetchAndDisplayImages() {
@@ -120,8 +205,9 @@ async function fetchAndDisplayImages() {
 
 		// Clear whatever was there and add our new cards (images + any videos).
 		clearGallery();
-		mediaItems.forEach(item => {
-			const card = createGalleryItem(item);
+		latestMediaItems = mediaItems; // store for modal usage
+		mediaItems.forEach((item, idx) => {
+			const card = createGalleryItem(item, idx);
 			gallery.appendChild(card);
 		});
 

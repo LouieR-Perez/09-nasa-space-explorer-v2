@@ -25,6 +25,22 @@
     </div>
   </div>
 
+  <!-- Modal (hidden by default). We keep it at end of body for accessibility. -->
+  <div id="mediaModal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+    <div class="modal-backdrop" data-close="true"></div>
+    <div class="modal-content" role="document">
+      <button class="modal-close" id="modalCloseBtn" aria-label="Close details">×</button>
+      <div class="modal-body">
+        <h2 id="modalTitle"></h2>
+        <p class="modal-date" id="modalDate"></p>
+        <div class="modal-media-wrapper" id="modalMediaWrapper"></div>
+        <p class="modal-explanation" id="modalDescription"></p>
+        <div id="modalVideoLink" class="modal-video-link"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move script tag AFTER modal so elements exist when JS queries them -->
   <script src="js/script.js"></script>
 </body>
 </html>
