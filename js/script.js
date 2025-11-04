@@ -104,6 +104,29 @@ const modalCloseBtn = document.getElementById('modalCloseBtn');
 
 let lastFocusedElement = null; // to restore focus when closing
 
+// Extract a YouTube video ID from common URL formats. Returns null if not found.
+function extractYouTubeId(url) {
+	if (!url) return null;
+	try {
+		const u = new URL(url);
+		if (u.hostname.includes('youtube.com')) {
+			// watch?v=ID
+			const v = u.searchParams.get('v');
+			if (v) return v;
+			// embed/ID
+			const embedMatch = u.pathname.match(/\/embed\/([a-zA-Z0-9_-]{6,})/);
+			if (embedMatch) return embedMatch[1];
+		}
+		if (u.hostname === 'youtu.be') {
+			const id = u.pathname.replace('/', '').trim();
+			if (id) return id;
+		}
+	} catch (e) {
+		return null;
+	}
+	return null;
+}
+
 function openModalByIndex(index) {
 	const item = latestMediaItems[index];
 	if (!item) return;
@@ -119,20 +142,43 @@ function openModalByIndex(index) {
 	modalVideoLink.innerHTML = '';
 
 	if (mediaType === 'video') {
-		// Show thumbnail image if available, else fallback to url (could be an embeddable link)
-		const img = document.createElement('img');
-		img.src = item.thumbnail_url || item.url || '';
-		img.alt = item.title || 'Space video';
-		modalMediaWrapper.appendChild(img);
+			// Attempt to embed YouTube video seamlessly if URL is a YouTube link.
+			// Supported patterns: https://www.youtube.com/watch?v=ID or youtu.be/ID
+			const youTubeId = extractYouTubeId(item.url);
+			if (youTubeId) {
+				const wrapper = document.createElement('div');
+				wrapper.className = 'responsive-video';
+				const iframe = document.createElement('iframe');
+				iframe.src = `https://www.youtube.com/embed/${youTubeId}?rel=0`; // rel=0 for cleaner related videos
+				iframe.title = item.title || 'YouTube video';
+				iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+				iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+				iframe.allowFullscreen = true;
+				wrapper.appendChild(iframe);
+				modalMediaWrapper.appendChild(wrapper);
 
-		if (item.url) {
-			const link = document.createElement('a');
-			link.href = item.url;
-			link.target = '_blank';
-			link.rel = 'noopener noreferrer';
-			link.textContent = 'Open Video in New Tab';
-			modalVideoLink.appendChild(link);
-		}
+				// Provide a fallback open-in-new-tab link for accessibility / if iframe blocked.
+				const link = document.createElement('a');
+				link.href = item.url;
+				link.target = '_blank';
+				link.rel = 'noopener noreferrer';
+				link.textContent = 'Open on YouTube';
+				modalVideoLink.appendChild(link);
+			} else {
+				// Fallback: show thumbnail and link (previous behavior) if not YouTube.
+				const img = document.createElement('img');
+				img.src = item.thumbnail_url || item.url || '';
+				img.alt = item.title || 'Space video';
+				modalMediaWrapper.appendChild(img);
+				if (item.url) {
+					const link = document.createElement('a');
+					link.href = item.url;
+					link.target = '_blank';
+					link.rel = 'noopener noreferrer';
+					link.textContent = 'Open Video in New Tab';
+					modalVideoLink.appendChild(link);
+				}
+			}
 	} else {
 		// Large image
 		const img = document.createElement('img');
